@@ -29,3 +29,26 @@ def generate_combos(blank_list, temp_lets):
                 temp_word[last_blank] = letter
                 printable = ''.join(temp_word).lower()
                 print(printable)
+
+def rotate_and_track(blanks):
+    original = blanks[:]  # Make a copy of the original list
+    rotated = blanks[:]  # Start with the original list
+    rotations = [rotated[:]]  # Track all rotations, starting with the initial list
+
+    while True:
+        # Rotate the list
+        rotated = rotated[1:] + rotated[:1]
+
+        if rotated == original:
+            break
+
+        rotations.append(rotated[:])
+
+    return rotations
+
+# runs the code
+blank_list = get_blanks(temp_word)
+rotations = rotate_and_track(blank_list) # gets all possible combinations of blanks [0,3,4] -> [3,4,0] (these are indices)
+
+for i, rotation in enumerate(rotations):
+    generate_combos(rotation, temp_lets)

@@ -1,15 +1,13 @@
 import requests
 import time
 
-# Constants
-CURRENT_GUESS_LENGTH = 5
-FIXED_PART = ["_", "_", "I", "L", "_"]
-REMAINING_LETTERS = ["Q","I","L","H","J","Z","X","C","B","M"]
-KNOWN_LETTERS = ["H", "C"]
 
-# Find which slots are blank
-temp_word = FIXED_PART
-temp_lets = KNOWN_LETTERS
+
+
+
+def parse_fixed(temp):
+    print ( list(temp.upper()) )
+    return list(temp.upper())
 
 def is_word_real(word):
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
@@ -70,6 +68,18 @@ def rotate_and_track(blanks):
         rotations.append(rotated[:])
 
     return rotations
+
+# Constants
+CURRENT_GUESS_LENGTH = 5
+FIXED_PART = parse_fixed(input("Which letters do you know for sure? Type the word as you know it: _____\n"))
+KNOWN_LETTERS = parse_fixed(input("Which letters are there but you don't know where?\n")) # this is iffy, you can only have two 'known' letters in there
+REMAINING_LETTERS = parse_fixed(input("Which letters remain?\n"))
+
+
+
+# Find which slots are blank
+temp_word = FIXED_PART
+temp_lets = KNOWN_LETTERS
 
 # runs the code
 blank_list = get_blanks(temp_word)

@@ -1,4 +1,5 @@
 import string
+import random
 
 class Game:
     def __init__(self):
@@ -12,7 +13,8 @@ class Game:
         self.word_bank = self.words_list
         
     
-    def game_loop(self):
+    def manual_loop(self):
+        self.setup()
         print ("Hello, welcome to the Wordl assistant.\nFirst, input your guess, and then tell me the results.")
         print("If your letter is present and in the correct place, put a '+' before it.\n If it is present and not in the right place, add a '-'.\n")
         
@@ -29,8 +31,41 @@ class Game:
     
         print("Alright buddy, it's on you now, choose the right one.")
         
+    
+    def bot_mode(self, target_word):
+        print(f"The target word is {target_word}")
         
-    def process_letter(self, position):
+        self.setup()
+        for i in range(6):
+            guess = self.get_random_word()
+            print(f"We are guessing {guess}")
+            results = self.validate_guess(guess, target_word)
+            
+            # use position names properly
+            for pos_name, result in zip(self.positions.keys(), results):
+                letter = result[-1]
+                first_char = result[0] if len(result) > 1 else ''
+                self.update_letter(pos_name, letter, first_char)
+                
+            self.update_wordbank()
+            if guess == target_word:
+                return True, i+1
+        return False, 6
+        
+        
+    def validate_guess(self, guess, target_word):
+        result = []
+        for i, letter in enumerate(guess):
+            if letter == target_word[i]:
+                result.append(f"+{letter}")
+            elif letter in target_word:
+                result.append(f"-{letter}")
+            else:
+                result.append(letter)
+        return result
+        
+    
+    def manual_process_letter(self, position):
         while True:
             # get the letter
             letter_guess = input(f"{position} letter: ").lower()
@@ -56,7 +91,8 @@ class Game:
             self.letter_status[letter]["status"] = "correct"
             self.letter_status[letter]["position"] = self.positions[position]
         else:
-            self.letter_status[letter]["status"] = "absent"
+            if self.letter_status[letter]["status"] != "present":
+                self.letter_status[letter]["status"] = "absent"
     
     
     
@@ -118,7 +154,6 @@ class Game:
             if self.letter_status[letter]["status"] == "absent":
                 return True
         except KeyError:
-            print(f"Invalid letter encountered: {letter}")
             return True  
     
     def is_wrong_position(self, letter_in_focus, current_position):
@@ -132,7 +167,6 @@ class Game:
             return False
         
         except KeyError:
-            print(f"Invalid letter encountered: {letter_in_focus}")
             return True
             
         
@@ -167,3 +201,6 @@ class Game:
             # split on commas and clean up each word
             words = [word.strip().strip('"') for word in text.split(',')]
         return words
+    
+    def get_random_word(self):
+        return random.choice(self.word_bank)

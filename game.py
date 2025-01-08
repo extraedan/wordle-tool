@@ -12,19 +12,23 @@ class Game:
         self.word_bank = self.words_list
         
     
-    
     def game_loop(self):
         print ("Hello, welcome to the Wordl assistant.\nFirst, input your guess, and then tell me the results.")
         print("If your letter is present and in the correct place, put a '+' before it.\n If it is present and not in the right place, add a '-'.\n")
         
-        # process each of the five letters
-        for position in self.positions:
-            self.process_letter(position)
+        for i in range(5):
+            print(f"Starting round {i+1}")
+            # process each of the five letters
+            for position in self.positions:
+                self.process_letter(position)
+            
+            self.update_wordbank()
+            
+            for word in self.word_bank:
+                print(word)
+    
+        print("Alright buddy, it's on you now, choose the right one.")
         
-        self.update_wordbank()
-        
-        for word in self.word_bank:
-            print(word)
         
     def process_letter(self, position):
         while True:
@@ -37,11 +41,6 @@ class Game:
             
             actual_letter = letter_guess[1] if len(letter_guess) > 1 else letter_guess
             first_character = letter_guess[0]
-            
-            # check if input is valid, else try again
-            if actual_letter not in self.letters or self.letter_status[actual_letter]["status"] == "absent":
-                print("That's not a valid letter, try again.")
-                continue
 
             # for each position, update the letter
             self.update_letter(position, actual_letter, first_character)
@@ -51,6 +50,7 @@ class Game:
     def update_letter(self, position, letter, first_character):
         if first_character == "-":
             self.letter_status[letter]["status"] = "present"
+            self.letter_status[letter]["wrong_positions"].append(self.positions[position])
         
         elif first_character == "+":
             self.letter_status[letter]["status"] = "correct"
@@ -58,50 +58,92 @@ class Game:
         else:
             self.letter_status[letter]["status"] = "absent"
     
-    # now we need to check each words and update the wordbank sooo.
+    
+    
+    
     def update_wordbank(self):
-        
         updated_bank = []
         
-        # check if each word is valid
+        #iterate through each word
         for word in self.word_bank:
-            valid = True
-            letters_in_word = list(word)
-            
-            # check each letter for disqualifcations
-            for index, letter in enumerate(letters_in_word):
-                # check if letter is absent
-                try:
-                    if self.letter_status[letter]["status"] == "absent":
-                        valid = False
-                except KeyError:
-                    print(f"Invalid letter encountered: {letter}")
-                    valid = False
-                    
-                # check if letter is in the correct position
-                try:
-                    if self.letter_status[letter]["status"] == "correct" and self.letter_status[letter]["position"] != index + 1:
-                        valid = False
-                except KeyError:
-                    print(f"Invalid letter encountered: {letter}")
-                    valid = False
-                
-                if not valid:
-                    break
-            
-            # add to updated wordbank if valid
-            if valid == True:
+            if self.is_valid(word):
                 updated_bank.append(word)
-                    
+                
         self.word_bank = updated_bank
+    
+    
+    def is_valid(self, word):
+        """Returns true if word passes all checks to be valid"""
+        letters_in_word = list(word)
+        # check each letter in word
+        for index, letter in enumerate(letters_in_word):
+            if self.is_letter_absent(letter):
+                return False
+            elif self.is_wrong_position(letter,index+1):
+                return False
+            elif self.is_wrong_present_position(letter,index+1):
+                return False
+            
+        if not self.contains_all_present_letters(word):
+            return False
+        
+        return True
+    
+    def is_wrong_present_position(self,focus_letter,current_position):
+        # look up the letter we're focusing on
+        # if it's present
+        # is our current position in it's wrong position tab?
+        # if so, True
+        
+        try:
+            if self.letter_status[focus_letter]["status"] == "present":
+                if current_position in self.letter_status[focus_letter]["wrong_positions"]:
+                    return True
+        except KeyError:
+            print(f"Invalid letter encountered: {focus_letter}")
+            return True 
+        
+        return False
+        
+        
+    def contains_all_present_letters(self, word):  
+        present_letters = [letter for letter, info in self.letter_status.items() if info["status"] == "present"]
+        for letter in present_letters:
+            if letter not in word:  
+                return False
+        return True
+        
+    def is_letter_absent(self, letter):
+        try:
+            if self.letter_status[letter]["status"] == "absent":
+                return True
+        except KeyError:
+            print(f"Invalid letter encountered: {letter}")
+            return True  
+    
+    def is_wrong_position(self, letter_in_focus, current_position):
+        """Returns true if the letter in focus does not match the letter in a correct position"""
+        try:
+            for letter, info in self.letter_status.items():
+                if info["position"] is not None:  
+                    if info["position"] == current_position:  
+                        if letter_in_focus != letter:  
+                            return True
+            return False
+        
+        except KeyError:
+            print(f"Invalid letter encountered: {letter_in_focus}")
+            return True
+            
+        
         
         
     def reset_letters(self):
-        print(self.letters)
         letter_status = {
         letter: {
             'status': 'unused',
-            'position': None
+            'position': None,
+            'wrong_positions': []
         } for letter in self.letters
     }
         return letter_status
